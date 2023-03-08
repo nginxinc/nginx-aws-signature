@@ -2,6 +2,8 @@
 
 NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda via NGINX and NGINX Plus.
 
+![](./docs/img/nginx-aws-signature.png)
+
 ## Getting Started
 
 TBD
