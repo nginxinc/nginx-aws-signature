@@ -6,7 +6,7 @@ NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda v
 
 ## Getting Started
 
-TBD
+![](./docs/img/nginx-aws-signature-flow.png)
 
 ## How to Use
 
