@@ -68,7 +68,7 @@ function sessionToken(r) {
 }
 
 /**
- * Get the instance profile credentials needed to authenticated against S3 from
+ * Get the instance profile credentials needed to authenticate against Lambda from
  * a backend cache. If the credentials cannot be found, then return undefined.
  * @param r {Request} HTTP request object (not used, but required for NGINX configuration)
  * @returns {undefined|{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string|null), expiration: (string|null)}} AWS instance profile credentials or undefined
@@ -76,8 +76,11 @@ function sessionToken(r) {
 function readCredentials(r) {
     // TODO: Change the generic constants naming for multiple AWS services.
     if ('AWS_ACCESS_KEY_ID' in process.env && 'AWS_SECRET_ACCESS_KEY' in process.env) {
-        const sessionToken = 'AWS_SESSION_TOKEN' in process.env ?
-                              process.env['AWS_SESSION_TOKEN'] : null;
+        let sessionToken = 'AWS_SESSION_TOKEN' in process.env ?
+            process.env['AWS_SESSION_TOKEN'] : null;
+        if (sessionToken != null && sessionToken.length === 0) {
+            sessionToken = null;
+        }
         return {
             accessKeyId: process.env['AWS_ACCESS_KEY_ID'],
             secretAccessKey: process.env['AWS_SECRET_ACCESS_KEY'],
@@ -207,8 +210,8 @@ function _writeCredentialsToFile(credentials) {
 
 /**
  * Get the credentials needed to create AWS signatures in order to authenticate
- * to S3. If the gateway is being provided credentials via a instance profile
- * credential as provided over the metadata endpoint, this function will:
+ * to AWS service. If the gateway is being provided credentials via a instance 
+ * profile credential as provided over the metadata endpoint, this function will:
  * 1. Try to read the credentials from cache
  * 2. Determine if the credentials are stale
  * 3. If the cached credentials are missing or stale, it gets new credentials
@@ -265,10 +268,10 @@ async function fetchCredentials(r) {
             return;
         }
     }
-    else if(process.env['AWS_WEB_IDENTITY_TOKEN_FILE']) {
+    else if (process.env['AWS_WEB_IDENTITY_TOKEN_FILE']) {
         try {
             credentials = await _fetchWebIdentityCredentials(r)
-        } catch(e) {
+        } catch (e) {
             utils.debug_log(r, 'Could not assume role using web identity: ' + JSON.stringify(e));
             r.return(500);
             return;
@@ -367,7 +370,7 @@ async function _fetchEC2RoleCredentials() {
  */
 async function _fetchWebIdentityCredentials(r) {
     const arn = process.env['AWS_ROLE_ARN'];
-    const name = process.env['HOSTNAME'] || 'nginx-s3-gateway';
+    const name = process.env['HOSTNAME'] || 'nginx-lambda-gateway';
 
     let sts_endpoint = process.env['STS_ENDPOINT'];
     if (!sts_endpoint) {

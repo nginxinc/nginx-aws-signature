@@ -43,34 +43,6 @@ function _runSignatureV2(r) {
     }
 }
 
-
-/**
- * Generate some of request parameters for AWS signature version 2
- *
- * @see {@link https://docs.aws.amazon.com/AmazonS3/latest/userguide/auth-request-sig-v2.html | AWS signature version 2}
- * @param r {Request} HTTP request object
- * @param bucket {string} S3 bucket associated with request
- * @returns s3ReqParams {object} s3ReqParams object (host, method, uri, queryParams)
- * @private
- */
-function _s3ReqParamsForSigV2(r, bucket) {
-    /* If the source URI is a directory, we are sending to S3 a query string
-     * local to the root URI, so this is what we need to encode within the
-     * string to sign. For example, if we are requesting /bucket/dir1/ from
-     * nginx, then in S3 we need to request /?delimiter=/&prefix=dir1/
-     * Thus, we can't put the path /dir1/ in the string to sign. */
-    let uri = _isDirectory(r.variables.uri_path) ? '/' : r.variables.uri_path;
-    // To return index pages + index.html
-    if (PROVIDE_INDEX_PAGE && _isDirectory(r.variables.uri_path)){
-        uri = r.variables.uri_path + INDEX_PAGE
-    }
- 
-    return {
-        uri: '/' + bucket + uri,
-        httpDate: s3date(r)
-    };
-}
-
 function testSignatureV2() {
     printHeader('testSignatureV2');
     // Note: since this is a read-only gateway, host, query parameters and all
