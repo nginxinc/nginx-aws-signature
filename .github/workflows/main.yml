@@ -21,7 +21,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install -y wait-for-it
       - name: Run tests - stable njs version
-        run: ./tests/test.sh --type oss
+        run: export NGINX_TYPE=oss && ./tests/test.sh --type oss
 
   # build_and_deploy:
   #   runs-on: ubuntu-latest
