@@ -1,0 +1,112 @@
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the main branch
+on:
+  push:
+    branches: [ main, awssig-v4-test ]
+  pull_request:
+    branches: [ main ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    if: github.ref != 'refs/heads/main'
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: sudo apt-get install -y wait-for-it
+      - name: Run tests - stable njs version
+        run: export NGINX_TYPE=oss && ./tests/test.sh --type oss
+
+  # build_and_deploy:
+  #   runs-on: ubuntu-latest
+
+  #   if: github.ref == 'refs/heads/main'
+  #   steps:
+  #     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+  #     - uses: actions/checkout@v3
+
+  #     - name: Get current date
+  #       id: date
+  #       run: echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+  #     - name: Configure Github Package Registry
+  #       run: echo ${{ secrets.GITHUB_TOKEN }} | docker login docker.pkg.github.com -u $GITHUB_ACTOR --password-stdin
+  #     - name: Install dependencies
+  #       run: sudo apt-get install -y wait-for-it
+
+  #     # Run tests and builds image
+  #     - name: Run tests - latest njs version
+  #       run: ./test.sh --latest-njs --type oss
+  #     # latest-njs-oss image push [Github]
+  #     - name: Tag container image for Push to github [latest-njs-oss date]
+  #       run: docker tag nginx-s3-gateway:latest-njs-oss docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest-njs-oss-${{ steps.date.outputs.date }}
+  #     - name: Tag container image for Push to github [latest-njs-oss]
+  #       run: docker tag nginx-s3-gateway:latest-njs-oss docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest-njs-oss
+  #     - name: Push container image to github [latest-njs-oss date]
+  #       run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest-njs-oss-${{ steps.date.outputs.date }}
+  #     - name: Push container image to github [latest-njs-oss]
+  #       run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest-njs-oss
+
+  #     # Run tests and builds image
+  #     - name: Run tests - stable njs version - unprivileged process
+  #       run: ./test.sh --unprivileged --type oss
+  #     # unprivileged-oss image push [Github]
+  #     - name: Tag container image for Push to github [unprivileged-oss date]
+  #       run: docker tag nginx-s3-gateway:unprivileged-oss docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:unprivileged-oss-${{ steps.date.outputs.date }}
+  #     - name: Tag container image for Push to github [unprivileged-oss]
+  #       run: docker tag nginx-s3-gateway:unprivileged-oss docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:unprivileged-oss
+  #     - name: Push container image to github [unprivileged-oss date]
+  #       run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:unprivileged-oss-${{ steps.date.outputs.date }}
+  #     - name: Push container image to github [unprivileged-oss]
+  #       run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:unprivileged-oss
+
+  #     # Run tests and builds image
+  #     - name: Run tests - stable njs version
+  #       run: ./test.sh --type oss
+  #     # oss image push [Github]
+  #     - name: Tag container image for Push to github [oss date]
+  #       run: docker tag nginx-s3-gateway:oss docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest-${{ steps.date.outputs.date }}
+  #     - name: Tag container image for Push to github [oss]
+  #       run: docker tag nginx-s3-gateway:oss docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest
+  #     - name: Push container image to github [oss date]
+  #       run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest-${{ steps.date.outputs.date }}
+  #     - name: Push container image to github [oss latest]
+  #       run: docker push docker.pkg.github.com/$GITHUB_REPOSITORY/nginx-oss-s3-gateway:latest
+  #     # Login to Docker Hub
+  #     - name: Login to Docker Hub
+  #       uses: docker/login-action@v1
+  #       with:
+  #         username: ${{ secrets.DOCKER_HUB_USERNAME }}
+  #         password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+  #     # latest-njs-oss image push [Docker Hub]
+  #     - name: Tag container image for Push to Docker Hub [latest-njs-oss date]
+  #       run: docker tag nginx-s3-gateway:latest-njs-oss nginxinc/nginx-s3-gateway:latest-njs-oss-${{ steps.date.outputs.date }}
+  #     - name: Tag container image for Push to Docker Hub [latest-njs-oss]
+  #       run: docker tag nginx-s3-gateway:latest-njs-oss nginxinc/nginx-s3-gateway:latest-njs-oss
+  #     - name: Push container image to Docker Hub [latest-njs-oss date]
+  #       run: docker push nginxinc/nginx-s3-gateway:latest-njs-oss-${{ steps.date.outputs.date }}
+  #     - name: Push container image to Docker Hub [latest-njs-oss]
+  #       run: docker push nginxinc/nginx-s3-gateway:latest-njs-oss
+  #     # unprivileged-oss image push [Docker Hub]
+  #     - name: Tag container image for Push to Docker Hub [unprivileged-oss date]
+  #       run: docker tag nginx-s3-gateway:unprivileged-oss nginxinc/nginx-s3-gateway:unprivileged-oss-${{ steps.date.outputs.date }}
+  #     - name: Tag container image for Push to Docker Hub [unprivileged-oss]
+  #       run: docker tag nginx-s3-gateway:unprivileged-oss nginxinc/nginx-s3-gateway:unprivileged-oss
+  #     - name: Push container image to Docker Hub [unprivileged-oss date]
+  #       run: docker push nginxinc/nginx-s3-gateway:unprivileged-oss-${{ steps.date.outputs.date }}
+  #     - name: Push container image to Docker Hub [unprivileged-oss]
+  #       run: docker push nginxinc/nginx-s3-gateway:unprivileged-oss
+  #     # oss image push [Docker Hub]
+  #     - name: Tag container image for Push to Docker Hub [oss date]
+  #       run: docker tag nginx-s3-gateway:oss nginxinc/nginx-s3-gateway:latest-${{ steps.date.outputs.date }}
+  #     - name: Tag container image for Push to Docker Hub [oss]
+  #       run: docker tag nginx-s3-gateway:oss nginxinc/nginx-s3-gateway:latest
+  #     - name: Push container image to Docker Hub [oss date]
+  #       run: docker push nginxinc/nginx-s3-gateway:latest-${{ steps.date.outputs.date }}
+  #     - name: Push container image to Docker Hub [oss latest]
+  #       run: docker push nginxinc/nginx-s3-gateway:latest

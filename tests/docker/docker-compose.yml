@@ -1,0 +1,17 @@
+version: '3'
+services:
+  nginx_aws_signature_test:
+    hostname: nginx_aws_signature_test
+    container_name: nginx_aws_signature_test
+    image: nginx_aws_signature_test:${NGINX_TYPE}
+    build:
+      context: ./
+      dockerfile: Dockerfile.${NGINX_TYPE}
+    volumes:
+      - ./build_context/etc/nginx/conf.d:/etc/nginx/conf.d
+      - ../../core:/etc/nginx/serverless
+      - ../unit-test:/var/tmp
+    ports:
+      - "8989:80"
+    env_file:
+      - settings.env
