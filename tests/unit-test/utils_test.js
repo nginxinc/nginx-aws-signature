@@ -122,17 +122,17 @@ function testPad() {
     }
 }
 
-// function testDummyFailure1() {
-//     throw 'Test Dummy 1.\n' +
-//     'Actual:   ' + 'Success' + '\n' +
-//     'Expected: ' + 'Failure';
-// }
+function testDummyFailure1() {
+    throw 'Test Dummy 1.\n' +
+    'Actual:   ' + 'Success' + '\n' +
+    'Expected: ' + 'Failure';
+}
 
-// function testDummyFailure2() {
-//     throw 'Test Dummy 2.\n' +
-//     'Actual:   ' + 'Success' + '\n' +
-//     'Expected: ' + 'Failure';
-// }
+function testDummyFailure2() {
+    throw 'Test Dummy 2.\n' +
+    'Actual:   ' + 'Success' + '\n' +
+    'Expected: ' + 'Failure';
+}
 
 
 async function test() {
@@ -140,8 +140,8 @@ async function test() {
     testEightDigitDate();
     testPad();
     testParseArray();
-    // testDummyFailure1();
-    // testDummyFailure2();
+    testDummyFailure1();
+    testDummyFailure2();
 }
     
 function printHeader(testName) {
