@@ -16,4 +16,3 @@ down:
 clean: 
 	docker kill $$(docker ps -q) 2> /dev/null || true
 	docker system prune -a
-	docker volume rm $(docker volume ls -qf dangling=true)

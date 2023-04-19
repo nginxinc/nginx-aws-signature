@@ -160,8 +160,8 @@ finish() {
   fi
 
   p "Cleaning up Docker compose environment"
-  compose stop
-  compose rm -f
+  docker kill nginx_aws_signature_test 2> /dev/null || true
+  docker rmi  nginx_aws_signature_test 2> /dev/null || true
 
   exit ${result}
 }
@@ -171,18 +171,6 @@ trap finish EXIT ERR SIGTERM SIGINT
 
 p "Building NGINX AWS Signature Lib Test Docker image"
 docker-compose -f ${test_compose_config} up -d
-
-if [ ${njs_latest} -eq 1 ]; then
-  p "Layering in latest NJS build"
-  docker build -f docker/Dockerfile.latest-njs \
-    --tag nginx_aws_signature_test --tag nginx_aws_signature_test:latest-njs-${nginx_type} .
-fi
-
-if [ ${unprivileged} -eq 1 ]; then
-  p "Layering in unprivileged build"
-  docker build -f docker/Dockerfile.unprivileged \
-    --tag nginx_aws_signature_test --tag nginx_aws_signature_test:unprivileged-${nginx_type} .
-fi
 
 ### UNIT TESTS
 
