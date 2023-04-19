@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-import utils from "include/utils.js";
+import utils from "/etc/nginx/serverless/utils.js";
 
 function testParseArray() {
     printHeader('testParseArray');
@@ -122,11 +122,26 @@ function testPad() {
     }
 }
 
+// function testDummyFailure1() {
+//     throw 'Test Dummy 1.\n' +
+//     'Actual:   ' + 'Success' + '\n' +
+//     'Expected: ' + 'Failure';
+// }
+
+// function testDummyFailure2() {
+//     throw 'Test Dummy 2.\n' +
+//     'Actual:   ' + 'Success' + '\n' +
+//     'Expected: ' + 'Failure';
+// }
+
+
 async function test() {
     testAmzDatetime();
     testEightDigitDate();
     testPad();
     testParseArray();
+    // testDummyFailure1();
+    // testDummyFailure2();
 }
     
 function printHeader(testName) {

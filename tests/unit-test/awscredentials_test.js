@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-import awscred from "include/awscredentials.js";
+import awscred from "/etc/nginx/serverless/awscredentials.js";
 import fs from "fs";
 
 globalThis.ngx = {};

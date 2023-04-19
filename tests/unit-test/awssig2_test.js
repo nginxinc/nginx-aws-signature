@@ -16,7 +16,7 @@
  *  limitations under the License.
  */
 
-import awssig2 from "include/awssig2.js";
+import awssig2 from "/etc/nginx/serverless/awssig2.js";
 
 
 function _runSignatureV2(r) {

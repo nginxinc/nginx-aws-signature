@@ -16,8 +16,8 @@
  *  limitations under the License.
  */
 
-import awssig4 from "include/awssig4.js";
-import utils from "include/utils.js";
+import awssig4 from "/etc/nginx/serverless/awssig4.js";
+import utils from "/etc/nginx/serverless/utils.js";
 
 
 function testBuildSigningKeyHashWithReferenceInputs() {
