@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 #
-#  Copyright 2020 F5 Networks
+#  Copyright 2023 F5, Inc.
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
 #  you may not use this file except in compliance with the License.
@@ -237,29 +237,29 @@ if [ "${nginx_type}" = "plus" ]; then
   if docker buildx > /dev/null 2>&1; then
     p "Building using BuildKit"
     export DOCKER_BUILDKIT=1
-    docker build -f Dockerfile.buildkit.${nginx_type} \
+    docker build -f test/docker/Dockerfile.buildkit.${nginx_type} \
       --secret id=nginx-crt,src=plus/etc/ssl/nginx/nginx-repo.crt \
       --secret id=nginx-key,src=plus/etc/ssl/nginx/nginx-repo.key \
       --no-cache --squash \
       --tag nginx-s3-gateway --tag nginx-s3-gateway:${nginx_type} .
   else
-    docker build -f Dockerfile.${nginx_type} \
+    docker build -f test/docker/Dockerfile.${nginx_type} \
       --tag nginx-s3-gateway --tag nginx-s3-gateway:${nginx_type} .
   fi
 else
-  docker build -f Dockerfile.${nginx_type} \
+  docker build -f test/docker/Dockerfile.${nginx_type} \
     --tag nginx-s3-gateway --tag nginx-s3-gateway:${nginx_type} .
 fi
 
 if [ ${njs_latest} -eq 1 ]; then
   p "Layering in latest NJS build"
-  docker build -f Dockerfile.latest-njs \
+  docker build -f test/docker/Dockerfile.latest-njs \
     --tag nginx-s3-gateway --tag nginx-s3-gateway:latest-njs-${nginx_type} .
 fi
 
 if [ ${unprivileged} -eq 1 ]; then
   p "Layering in unprivileged build"
-  docker build -f Dockerfile.unprivileged \
+  docker build -f test/docker/Dockerfile.unprivileged \
     --tag nginx-s3-gateway --tag nginx-s3-gateway:unprivileged-${nginx_type} .
 fi
 
