@@ -276,8 +276,7 @@ function awsHeaderDate(r) {
  * @returns {string} payload hash
  */
 function awsHeaderPayloadHash(r) {
-    const reqBody = (r.variables.request_body === 'undefined') ? '':
-                     r.variables.request_body;
+    const reqBody = r.variables.request_body ? r.variables.request_body: '';
     const payloadHash = mod_hmac.createHash('sha256', 'utf8')
         .update(reqBody)
         .digest('hex');
