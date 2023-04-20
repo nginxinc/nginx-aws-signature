@@ -8,6 +8,34 @@ NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda v
 
 ![](./docs/img/nginx-aws-signature-flow.png)
 
+## Directory Structure and File Descriptions
+
+```
+nginx-aws-signature
+│
+├── core
+│   ├── awscredentials.js       common lib to read and write AWS credentials
+│   ├── awssig2.js              common lib to build AWS signature v2
+│   ├── awssig4.js              common lib to build AWS signature v4
+│   │                           :
+│   │                           add new lib when AWS releases new signature ver.
+│   │                           :
+│   └── utils.js                common lib to be reused by all NJS codebase
+│
+├── tests
+│   ├── docker
+│   │   ├── build_text          Docker environments for testing NJS codebases
+│   │   │   ├── nginx           NGINX config files for testing NJS codebases
+│   │   │   └── ssl             NGINX Plus license files when testing lib on NGINX Plus
+│   │   ├── Dockerfile.oss      for testing AWS signaure lib on NGINX OSS
+│   │   ├── Dockerfile.plus     for testing AWS signaure lib on NGINX Plus
+│   │   └── docker-compose.yml  to build and run a container for testing AWS signaure lib
+│   ├── unit-test               contains automated tests for validang that the lib works
+│   └── test.sh                 test launcher
+│
+└── Makefile                    automate to build/start/stop testing environment
+```
+
 ## How to Use
 
 TBD
