@@ -18,7 +18,7 @@ NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda v
 This project is to provide the common library for your apps or services. To get this project up and running, the following nginx project can be used prior to implementing your project.
 
 - [Getting Started with `nginx-s3-gateway`](https://github.com/nginxinc/nginx-s3-gateway#getting-started)
-- [Getting Started with `nginx-lambda-gateway`](https://github.com/nginxinc/nginx-aws-signature/blob/main/README.md#Getting-Started)
+- [Getting Started with `nginx-lambda-gateway`](https://github.com/nginx-serverless/nginx-lambda-gateway#getting-started)
 
 ## Directory Structure and File Descriptions
 
