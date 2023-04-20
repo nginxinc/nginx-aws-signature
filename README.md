@@ -114,6 +114,14 @@ server {
 }
 ```
 
+**Examples:**
+
+| Project                | Config example                           |
+|------------------------|------------------------------------------|
+| `nginx-s3-gateway`     | [`/etc/nginx/conf.d/default.conf`](https://github.com/nginxinc/nginx-s3-gateway/blob/master/common/etc/nginx/templates/default.conf.template) |
+| `nginx-lambda-gateway` | [`/etc/nginx/conf.d/nginx_lambda_gateway.conf`](https://github.com/nginx-serverless/nginx-lambda-gateway/blob/main/common/etc/nginx/conf.d/nginx_lambda_gateway.conf) |
+
+
 ### Integrate AWS Signature Lib To Your Custom NJS
 
 Import library files of `nginx-aws-signature`, and implement a function to generate `Authorization` header by using the lib with the proper parameters in your custom NJS.
