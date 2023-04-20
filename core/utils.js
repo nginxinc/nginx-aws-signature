@@ -23,6 +23,26 @@ const DEBUG = parseBoolean(process.env['DEBUG']);
 
 
 /**
+ * Checks to see if all of the elements of the passed array are present as keys
+ * in the running process' environment variables. Alternatively, if a single
+ * string is passed, it will check for the presence of that string.
+ * @param envVars {array[string]|string} array of expected keys or single expected key
+ * @returns {boolean} true if all keys are set as environment variables
+ */
+function areAllEnvVarsSet(envVars) {
+    if (envVars instanceof Array) {
+        const envVarsLen = envVars.length;
+        for (let i = 0; i < envVarsLen; i++) {
+            if (!process.env[envVars[i]]) {
+                return false;
+            }
+        }
+        return true;
+    }
+    return envVars in process.env;
+}
+
+/**
  * Parses a string delimited by semicolons into an array of values
  * @param string {string|null} value representing a array of strings
  * @returns {Array} a list of values
@@ -143,6 +163,7 @@ function requireEnvVar(envVarName) {
 }
 
 export default {
+    areAllEnvVarsSet,
     debug_log,
     getAmzDatetime,
     getEightDigitDate,

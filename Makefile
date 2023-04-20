@@ -5,10 +5,10 @@ start-plus:
 	export NGINX_TYPE=plus && docker-compose -f tests/docker/docker-compose.yml up -d
 
 test:
-	bash tests/test.sh --type oss
+	export NGINX_TYPE=oss && bash tests/test.sh --type oss
 
 test-plus:
-	bash tests/test.sh --type plus
+	export NGINX_TYPE=plus && bash tests/test.sh --type plus
 
 down:
 	docker-compose -f tests/docker/docker-compose.yml down
