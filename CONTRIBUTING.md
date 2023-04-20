@@ -32,8 +32,24 @@ To suggest a feature or enhancement, please create an issue on GitHub with the l
 
 - Fork the repo, create a branch, implement your changes, add any relevant tests, submit a PR when your changes are **tested** and ready for review.
 
-  - **Unit Test**: run `make test` for NGINX OSS and `make test-plus` for NGINX Plus
-  - **Integration/Manual test**: ensure that your changes work in either your app or the following runtime
+  **Unit Test**:
+  
+  - Run one of the following commands for **NGINX OSS**:
+    ```bash
+    make test
+    export NGINX_TYPE=oss && bash tests/test.sh --type oss
+    ```  
+
+  - Run one of the following commands for **NGINX OSS**:
+    ```bash
+    make test-plus
+    export NGINX_TYPE=plus && bash tests/test.sh --type plus
+    ```  
+  
+  **Integration/Manual Test**:
+  
+    Ensure that your lib changes properly work with either your app or the following runtime:
+
     - [`nginx-s3-gateway`](https://github.com/nginxinc/nginx-s3-gateway)
     - [`nginx-lambda-gateway`](https://github.com/nginx-serverless/nginx-lambda-gateway)
   
