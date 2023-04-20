@@ -88,7 +88,6 @@ function readCredentials(r) {
             expiration: null
         };
     }
-
     if ("variables" in r && r.variables.cache_instance_credentials_enabled == 1) {
         return _readCredentialsFromKeyValStore(r);
     } else {
@@ -228,7 +227,7 @@ function _writeCredentialsToFile(credentials) {
 async function fetchCredentials(r) {
     /* If we are not using an AWS instance profile to set our credentials we
        exit quickly and don't write a credentials file. */
-    if (process.env['AWS_ACCESS_KEY_ID'] && process.env['AWS_SECRET_ACCESS_KEY']) {
+    if (utils.areAllEnvVarsSet(['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])) {
         r.return(200);
         return;
     }
@@ -258,8 +257,9 @@ async function fetchCredentials(r) {
 
     utils.debug_log(r, 'Cached credentials are expired or not present, requesting new ones');
 
-    if (process.env['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI']) {
-        const uri = ECS_CREDENTIAL_BASE_URI + process.env['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'];
+    if (utils.areAllEnvVarsSet('AWS_CONTAINER_CREDENTIALS_RELATIVE_URI')) {
+        const relative_uri = process.env['AWS_CONTAINER_CREDENTIALS_RELATIVE_URI'] || '';
+        const uri = ECS_CREDENTIAL_BASE_URI + relative_uri;        
         try {
             credentials = await _fetchEcsRoleCredentials(uri);
         } catch (e) {
@@ -268,7 +268,7 @@ async function fetchCredentials(r) {
             return;
         }
     }
-    else if (process.env['AWS_WEB_IDENTITY_TOKEN_FILE']) {
+    else if (utils.areAllEnvVarsSet('AWS_WEB_IDENTITY_TOKEN_FILE')) {
         try {
             credentials = await _fetchWebIdentityCredentials(r)
         } catch (e) {
