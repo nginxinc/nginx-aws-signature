@@ -8,6 +8,7 @@ NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda v
 
 - [Getting Started](#getting-started)
 - [Directory Structure and File Descriptions](#directory-structure-and-file-descriptions)
+- [NGINX AWS Signature Signing Flow](#nginx-aws-signature-signing-flow)
 - [How to Use](#how-to-use)
 - [Contributing](#contributing)
 - [Authors and acknowledgment](#authors-and-acknowledgment)
@@ -47,6 +48,8 @@ nginx-aws-signature
 │
 └── Makefile                    automate to build/start/stop testing environment
 ```
+
+## NGINX AWS Signature Signing Flow
 
 ![](./docs/img/nginx-aws-signature-flow.png)
 
