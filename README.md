@@ -2,7 +2,7 @@
 
 NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda via NGINX and NGINX Plus.
 
-![](./docs/img/nginx-aws-signature.png)
+![](./docs/img/nginx-aws-signature-intro.png)
 
 **TABLE OF CONTENTS:**
 
@@ -15,7 +15,10 @@ NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda v
 
 ## Getting Started
 
-![](./docs/img/nginx-aws-signature-flow.png)
+This project is to provide the common library for your apps or services. To get this project up and running, the following nginx project can be used prior to implementing your project.
+
+- [Getting Started with `nginx-s3-gateway`](https://github.com/nginxinc/nginx-s3-gateway#getting-started)
+- [Getting Started with `nginx-lambda-gateway`](https://github.com/nginxinc/nginx-aws-signature/blob/main/README.md#Getting-Started)
 
 ## Directory Structure and File Descriptions
 
@@ -45,11 +48,13 @@ nginx-aws-signature
 └── Makefile                    automate to build/start/stop testing environment
 ```
 
+![](./docs/img/nginx-aws-signature-flow.png)
+
 ## How to Use
 
 ### Sparse Checkouts of Submodules
 
-Create or update git submodule when using this lib in your repository. Otherwise, copy [`core/*.js`](./core/) into the prefered directory on your NGINX instance.
+Create or update `git submodule` when using this lib in your repository. Otherwise, skip the following steps, and copy [`core/*.js`](./core/) into the prefered directory on your NGINX instance.
 
 #### Step 1. Choose one of the following options
 - Option 1. Clone this repo with a depth of 1 for the first time
