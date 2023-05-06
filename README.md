@@ -90,6 +90,7 @@ js_set $awsDate                 awssig4.awsHeaderDate;
 js_set $awsPayloadHash          awssig4.awsHeaderPayloadHash;
 js_set $awsSessionToken         awscredentials.sessionToken;
 js_set $lambdaFunctionARNAuth   lambdagateway.lambdaFunctionARNAuth;
+js_var $defaultHostName         'nginx-lambda-gateway';
 
 map $request_uri $lambda_url {
     default  https://lambda.us-east-1.amazonaws.com;
@@ -145,7 +146,7 @@ function lambdaFunctionARNAuth(r) {
     const credentials = awscred.readCredentials(r);
 
     const signature = awssig4.signatureV4(
-        r, awscred.getNow(), region, SERVICE,
+        r, awscred.Now(), region, SERVICE,
         r.variables.request_uri, queryParams, host, credentials
     );
     return signature;

@@ -29,7 +29,6 @@ const EMPTY_PAYLOAD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495
  * Constant defining the headers being signed.
  * @type {string}
  */
-// const DEFAULT_SIGNED_HEADERS = 'host;x-amz-content-sha256;x-amz-date';
 const DEFAULT_SIGNED_HEADERS = 'host;x-amz-date';
 
 /**
@@ -197,8 +196,7 @@ function _buildStringToSign(amzDatetime, eightDigitDate, region, service, canoni
  * @private
  */
 function _signedHeaders(r, sessionToken) {
-    let headers = '';
-    headers += DEFAULT_SIGNED_HEADERS;
+    let headers = DEFAULT_SIGNED_HEADERS;
     if (sessionToken && sessionToken.length > 0) {
         headers += ';x-amz-security-token';
     }
@@ -264,8 +262,8 @@ function _splitCachedValues(cached) {
  */
 function awsHeaderDate(r) {
     return utils.getAmzDatetime(
-        awscred.getNow(),
-        utils.getEightDigitDate(awscred.getNow())
+        awscred.Now(),
+        utils.getEightDigitDate(awscred.Now())
     );
 }
 

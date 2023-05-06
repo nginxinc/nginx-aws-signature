@@ -68,8 +68,9 @@ function sessionToken(r) {
 }
 
 /**
- * Get the instance profile credentials needed to authenticate against Lambda from
- * a backend cache. If the credentials cannot be found, then return undefined.
+ * Get the instance profile credentials needed to authenticate against services 
+ * in AWS such as S3 and Lambda from a backend cache. If the credentials cannot
+ * be found, then return undefined.
  * @param r {Request} HTTP request object (not used, but required for NGINX configuration)
  * @returns {undefined|{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string|null), expiration: (string|null)}} AWS instance profile credentials or undefined
  */
@@ -363,14 +364,14 @@ async function _fetchEC2RoleCredentials() {
 
 /**
  * Get the credentials by assuming calling AssumeRoleWithWebIdentity with the environment variable
- * values ROLE_ARN, AWS_WEB_IDENTITY_TOKEN_FILE and HOSTNAME
+ * values ROLE_ARN, AWS_WEB_IDENTITY_TOKEN_FILE and AWS_ROLE_SESSION_NAME.
  *
  * @returns {Promise<{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string), expiration: (string)}>}
  * @private
  */
 async function _fetchWebIdentityCredentials(r) {
     const arn = process.env['AWS_ROLE_ARN'];
-    const name = process.env['HOSTNAME'] || 'nginx-lambda-gateway';
+    const name = process.env['AWS_ROLE_SESSION_NAME'];
 
     let sts_endpoint = process.env['STS_ENDPOINT'];
     if (!sts_endpoint) {
@@ -426,12 +427,12 @@ async function _fetchWebIdentityCredentials(r) {
  *
  * @returns {Date} The current moment as a timestamp
  */
-function getNow() {
+function Now() {
     return NOW;
 }
 
 export default {
-    getNow,
+    Now,
     fetchCredentials,
     readCredentials,
     sessionToken,
