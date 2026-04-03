@@ -37,7 +37,9 @@ e() {
   >&2 echo "$1"
 }
 
-usage() { e "Usage: $0 [--latest-njs <default:false>] [--unprivileged <default:false>] [--type <default:oss|plus>" 1>&2; exit 1; }
+usage() { e "Usage: $0 [--latest-njs <default:false>] [--podman] [--unprivileged <default:false>] [--type <default:oss|plus>" 1>&2; exit 1; }
+
+podman=0
 
 for arg in "$@"; do
   shift
@@ -46,6 +48,7 @@ for arg in "$@"; do
     '--latest-njs')     set -- "$@" '-j'   ;;
     '--unprivileged')   set -- "$@" '-u'   ;;
     '--type')           set -- "$@" '-t'   ;;
+    '--podman')         podman=1 ;;
     *)                  set -- "$@" "$arg" ;;
   esac
 done
@@ -73,17 +76,19 @@ startup_message=""
 if [ -z "${nginx_type}" ]; then
   nginx_type="oss"
   startup_message="Starting NGINX ${nginx_type} (default)"
-elif ! { [ ${nginx_type} == "oss" ] || [ ${nginx_type} == "plus" ]; }; then
+elif ! { [ "${nginx_type}" == "oss" ] || [ "${nginx_type}" == "plus" ]; }; then
     e "Invalid NGINX type: ${nginx_type} - must be either 'oss' or 'plus'"
     usage
 else
   startup_message="Starting NGINX ${nginx_type}"
 fi
 
+export nginx_type
+
 if [ -z "${njs_latest}" ]; then
   njs_latest="0"
   startup_message="${startup_message} with the release NJS module (default)"
-elif [ ${njs_latest} -eq 1 ]; then
+elif [ "${njs_latest}" -eq 1 ]; then
   startup_message="${startup_message} with the latest NJS module"
 else
   startup_message="${startup_message} with the release NJS module"
@@ -92,7 +97,7 @@ fi
 if [ -z "${unprivileged}" ]; then
   unprivileged="0"
   startup_message="${startup_message} in privileged mode (default)"
-elif [ ${unprivileged} -eq 1 ]; then
+elif [ "${unprivileged}" -eq 1 ]; then
   startup_message="${startup_message} in unprivileged mode"
 else
   startup_message="${startup_message} in privileged mode"
@@ -102,13 +107,22 @@ e "${startup_message}"
 
 set -o nounset   # abort on unbound variable
 
-docker_cmd="$(command -v docker)"
+set +o errexit
+if [ "$podman" -eq 1 ]; then
+  docker_cmd="$(command -v podman)"
+else
+  docker_cmd="$(command -v docker)"
+fi
 if ! [ -x "${docker_cmd}" ]; then
   e "required dependency not found: docker not found in the path or not executable"
   exit ${no_dep_exit_code}
 fi
 
-docker_compose_cmd="$(command -v docker-compose)"
+if [ "$podman" -eq 1 ]; then
+  docker_compose_cmd="$(command -v podman-compose)"
+else
+  docker_compose_cmd="$(command -v docker-compose)"
+fi
 if ! [ -x "${docker_compose_cmd}" ]; then
   e "required dependency not found: docker-compose not found in the path or not executable"
   exit ${no_dep_exit_code}
@@ -128,6 +142,8 @@ else
   wait_for_it_installed=0
 fi
 
+set -o errexit
+
 if [ "${nginx_type}" = "plus" ]; then
   if [ ! -f "${ssl_dir}/nginx-repo.crt" ]; then
     e "NGINX Plus certificate file not found: ${ssl_dir}/nginx-repo.crt"
@@ -142,7 +158,7 @@ fi
 
 compose() {
   # Hint to docker-compose the internal port to map for the container
-  if [ ${unprivileged} -eq 1 ]; then
+  if [ "${unprivileged}" -eq 1 ]; then
     export NGINX_INTERNAL_PORT=8080
   else
     export NGINX_INTERNAL_PORT=80
@@ -160,8 +176,8 @@ finish() {
   fi
 
   p "Cleaning up Docker compose environment"
-  docker kill nginx_aws_signature_test 2> /dev/null || true
-  docker rmi  nginx_aws_signature_test 2> /dev/null || true
+  "${docker_cmd}" kill nginx_aws_signature_test 2> /dev/null || true
+  "${docker_cmd}" rmi  nginx_aws_signature_test 2> /dev/null || true
 
   exit ${result}
 }
@@ -170,13 +186,13 @@ trap finish EXIT ERR SIGTERM SIGINT
 ### BUILD
 
 p "Building NGINX AWS Signature Lib Test Docker image"
-docker-compose -f ${test_compose_config} up -d
+"${docker_compose_cmd}" -f "${test_compose_config}" up -d
 
 ### UNIT TESTS
 
 runUnitTestWithOutSessionToken() {
   test_code="$1"
-  docker exec \
+  "${docker_cmd}" exec \
     -e "S3_DEBUG=true"                    \
     -e "S3_STYLE=virtual"                 \
     -e "AWS_ACCESS_KEY_ID=unit_test"      \
@@ -187,13 +203,13 @@ runUnitTestWithOutSessionToken() {
     -e "S3_SERVER_PORT=443"               \
     -e "S3_REGION=test-1"                 \
     -e "AWS_SIGS_VERSION=4"               \
-    nginx_aws_signature_test njs /var/tmp/${test_code}
+    nginx_aws_signature_test njs "/var/tmp/${test_code}"
 }
 
 runUnitTestWithSessionToken() {
   test_code="$1"
 
-  docker exec \
+  "${docker_cmd}" exec \
     -e "S3_DEBUG=true"                    \
     -e "S3_STYLE=virtual"                 \
     -e "AWS_ACCESS_KEY_ID=unit_test"      \
@@ -205,7 +221,7 @@ runUnitTestWithSessionToken() {
     -e "S3_SERVER_PORT=443"               \
     -e "S3_REGION=test-1"                 \
     -e "AWS_SIGS_VERSION=4"               \
-    nginx_aws_signature_test njs /var/tmp/${test_code}
+    nginx_aws_signature_test njs "/var/tmp/${test_code}"
 }
 
 p "Running unit tests for utils"

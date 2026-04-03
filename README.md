@@ -18,6 +18,8 @@ NGINX AWS Signature Library to authenticate AWS services such as S3 and Lambda v
 
 This project is to provide the common library for your apps or services. To get this project up and running, the following nginx project can be used prior to implementing your project.
 
+Requires njs 0.8.0+
+
 - [Getting Started with `nginx-s3-gateway`](https://github.com/nginxinc/nginx-s3-gateway#getting-started)
 - [Getting Started with `nginx-lambda-gateway`](https://github.com/nginx-serverless/nginx-lambda-gateway#getting-started)
 
@@ -95,6 +97,9 @@ js_var $defaultHostName         'nginx-lambda-gateway';
 map $request_uri $lambda_url {
     default  https://lambda.us-east-1.amazonaws.com;
 }
+
+#Create a shared dictionay 'aws' for ngx.shared
+js_shared_dict_zone zone=aws:32k type=string;
 
 server {
     listen 80; # Use SSL/TLS in production

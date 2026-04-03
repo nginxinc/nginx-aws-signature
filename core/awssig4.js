@@ -27,9 +27,9 @@ const EMPTY_PAYLOAD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495
 
 /**
  * Constant defining the headers being signed.
- * @type {string}
+ * @type {array}
  */
-const DEFAULT_SIGNED_HEADERS = 'host;x-amz-date';
+const DEFAULT_SIGNED_HEADERS = ['host','x-amz-date'];
 
 /**
  * Create HTTP Authorization header for authenticating with an AWS compatible
@@ -54,7 +54,7 @@ function signatureV4(r, timestamp, region, service, uri, queryParams, host, cred
         credentials, region, service, canonicalRequest);
     const authHeader = 'AWS4-HMAC-SHA256 Credential='
         .concat(credentials.accessKeyId, '/', eightDigitDate, '/', region, '/', service, '/aws4_request,',
-            'SignedHeaders=', _signedHeaders(r, credentials.sessionToken), ',Signature=', signature);
+            'SignedHeaders=', _signedHeaders(r, credentials.sessionToken).join(';'), ',Signature=', signature);
 
     utils.debug_log(r, 'AWS v4 Auth header: [' + authHeader + ']');
 
@@ -76,18 +76,40 @@ function signatureV4(r, timestamp, region, service, uri, queryParams, host, cred
 function _buildCanonicalRequest(r,
     method, uri, queryParams, host, amzDatetime, sessionToken) {
     const payloadHash = awsHeaderPayloadHash(r);
-    let canonicalHeaders = 'host:' + host + '\n' +
-                           'x-amz-date:' + amzDatetime + '\n';
+
+    const canonicalHeaders = {
+      host: host,
+      'x-amz-date': amzDatetime
+    };
 
     if (sessionToken && sessionToken.length > 0) {
-        canonicalHeaders += 'x-amz-security-token:' + sessionToken + '\n'
+      canonicalHeaders['x-amz-security-token'] = sessionToken;
+    }
+
+    //headers must be in alphabetical order
+    const signedHeaders = _signedHeaders(r, sessionToken).sort();
+
+    for (let i = 0; i < signedHeaders.length; i++) {
+      const header = signedHeaders[i];
+      if (canonicalHeaders[header] === undefined) {
+        canonicalHeaders[header] = r.headers.get(header);
+      }
+    }
+
+    const orderedCanonicalHeaderKeys = Object.keys(canonicalHeaders).sort();
+
+    let canonicalHeaderString = '';
+    for (let i = 0; i < orderedCanonicalHeaderKeys.length; i++) {
+      const header = orderedCanonicalHeaderKeys[i];
+
+      canonicalHeaderString += header + ':' + canonicalHeaders[header] + '\n';
     }
 
     let canonicalRequest = method + '\n';
     canonicalRequest += uri + '\n';
     canonicalRequest += queryParams + '\n';
-    canonicalRequest += canonicalHeaders + '\n';
-    canonicalRequest += _signedHeaders(r, sessionToken) + '\n';
+    canonicalRequest += canonicalHeaderString + '\n';
+    canonicalRequest += signedHeaders.join(';') + '\n';
     canonicalRequest += payloadHash;
     return canonicalRequest;
 }
@@ -187,19 +209,34 @@ function _buildStringToSign(amzDatetime, eightDigitDate, region, service, canoni
 }
 
 /**
- * Creates a string containing the headers that need to be signed as part of v4
+ * Returns an array of the headers that need to be signed as part of the v4
  * signature authentication.
  *
  * @param r {Request} HTTP request object
  * @param sessionToken {string|undefined} AWS session token if present
- * @returns {string} semicolon delimited string of the headers needed for signing
+ * @returns {array} 
  * @private
  */
 function _signedHeaders(r, sessionToken) {
-    let headers = DEFAULT_SIGNED_HEADERS;
-    if (sessionToken && sessionToken.length > 0) {
-        headers += ';x-amz-security-token';
+    let headers = [];
+
+    for (let i = 0; i < DEFAULT_SIGNED_HEADERS.length; i++) {
+      headers.push(DEFAULT_SIGNED_HEADERS[i]);
     }
+
+    if (sessionToken && sessionToken.length > 0) {
+        headers.push('x-amz-security-token');
+    }
+
+    //Any header that starts with x-amz
+    //must be included, eg x-amz-expected-bucket-owner
+    //https://docs.aws.amazon.com/IAM/latest/UserGuide/create-signed-request.html#create-canonical-request
+    r.headers.forEach((k) => {
+      if (! headers.includes(k) && k.startsWith('x-amz-')) {
+        headers.push(k);
+      }
+    });
+
     return headers;
 }
 

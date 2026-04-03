@@ -89,79 +89,15 @@ function readCredentials(r) {
             expiration: null
         };
     }
-    if ("variables" in r && r.variables.cache_instance_credentials_enabled == 1) {
-        return _readCredentialsFromKeyValStore(r);
-    } else {
-        return _readCredentialsFromFile();
+
+    if (ngx.shared.aws.has('instance_credential_json')) {
+      return JSON.parse(ngx.shared.aws.get('instance_credential_json'));
     }
+
 }
 
 /**
- * Read credentials from the NGINX Keyval store. If it is not found, then
- * return undefined.
- *
- * @param r {Request} HTTP request object (not used, but required for NGINX configuration)
- * @returns {undefined|{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string), expiration: (string)}} AWS instance profile credentials or undefined
- * @private
- */
-function _readCredentialsFromKeyValStore(r) {
-    const cached = r.variables.instance_credential_json;
-
-    if (!cached) {
-        return undefined;
-    }
-
-    try {
-        return JSON.parse(cached);
-    } catch (e) {
-        utils.debug_log(r, `Error parsing JSON value from r.variables.instance_credential_json: ${e}`);
-        return undefined;
-    }
-}
-
-/**
- * Read the contents of the credentials file into memory. If it is not
- * found, then return undefined.
- *
- * @returns {undefined|{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string), expiration: (string)}} AWS instance profile credentials or undefined
- * @private
- */
-function _readCredentialsFromFile() {
-    const credsFilePath = _credentialsTempFile();
-
-    try {
-        const creds = fs.readFileSync(credsFilePath);
-        return JSON.parse(creds);
-    } catch (e) {
-        /* Do not throw an exception in the case of when the
-           credentials file path is invalid in order to signal to
-           the caller that such a file has not been created yet. */
-        if (e.code === 'ENOENT') {
-            return undefined;
-        }
-        throw e;
-    }
-}
-
-/**
- * Returns the path to the credentials temporary cache file.
- *
- * @returns {string} path on the file system to credentials cache file
- * @private
- */
-function _credentialsTempFile() {
-    if (process.env['AWS_CREDENTIALS_TEMP_FILE']) {
-        return process.env['AWS_CREDENTIALS_TEMP_FILE'];
-    }
-    if (process.env['TMPDIR']) {
-        return `${process.env['TMPDIR']}/credentials.json`
-    }
-
-    return '/tmp/credentials.json';
-}
-
-/**
- * Write the instance profile credentials to a caching backend.
+ * Write the instance profile credentials to ngx.shared.aws
  *
  * @param r {Request} HTTP request object (not used, but required for NGINX configuration)
  * @param credentials {{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string), expiration: (string)}} AWS instance profile credentials
@@ -177,35 +113,7 @@ function writeCredentials(r, credentials) {
         throw `Cannot write invalid credentials: ${JSON.stringify(credentials)}`;
     }
 
-    if ("variables" in r && r.variables.cache_instance_credentials_enabled == 1) {
-        _writeCredentialsToKeyValStore(r, credentials);
-    } else {
-        _writeCredentialsToFile(credentials);
-    }
-}
-
-/**
- * Write the instance profile credentials to the NGINX Keyval store.
- *
- * @param r {Request} HTTP request object (not used, but required for NGINX configuration)
- * @param credentials {{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string), expiration: (string)}} AWS instance profile credentials
- * @private
- */
-function _writeCredentialsToKeyValStore(r, credentials) {
-    r.variables.instance_credential_json = JSON.stringify(credentials);
-}
-
-/**
- * Write the instance profile credentials to a file on the file system. This
- * file will be quite small and should end up in the file cache relatively
- * quickly if it is repeatedly read.
- *
- * @param r {Request} HTTP request object (not used, but required for NGINX configuration)
- * @param credentials {{accessKeyId: (string), secretAccessKey: (string), sessionToken: (string), expiration: (string)}} AWS instance profile credentials
- * @private
- */
-function _writeCredentialsToFile(credentials) {
-    fs.writeFileSync(_credentialsTempFile(), JSON.stringify(credentials));
+    ngx.shared.aws.set('instance_credential_json', JSON.stringify(credentials));
 }
 
 /**
@@ -223,12 +131,18 @@ function _writeCredentialsToFile(credentials) {
  * quickly exits.
  *
  * @param r {Request} HTTP request object
- * @returns {Promise<void>}
+ * @param inline {bool} If true, returns the result as a boolean, instead of invoking return on "r"
+ *
+ * @returns {Promise<void>|bool}
  */
-async function fetchCredentials(r) {
+async function fetchCredentials(r, inline) {
+
     /* If we are not using an AWS instance profile to set our credentials we
        exit quickly and don't write a credentials file. */
     if (utils.areAllEnvVarsSet(['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY'])) {
+        if (inline) {
+          return true;
+        }
         r.return(200);
         return;
     }
@@ -239,6 +153,9 @@ async function fetchCredentials(r) {
         current = readCredentials(r);
     } catch (e) {
         utils.debug_log(r, `Could not read credentials: ${e}`);
+        if (inline) {
+          return false;
+        }
         r.return(500);
         return;
     }
@@ -249,6 +166,9 @@ async function fetchCredentials(r) {
         const expireAt = typeof current.expiration == 'number' ? current.expiration * 1000 : current.expiration
         const exp = new Date(expireAt).getTime() - maxValidityOffsetMs;
         if (NOW.getTime() < exp) {
+            if (inline) {
+              return true;
+            }
             r.return(200);
             return;
         }
@@ -265,6 +185,9 @@ async function fetchCredentials(r) {
             credentials = await _fetchEcsRoleCredentials(uri);
         } catch (e) {
             utils.debug_log(r, 'Could not load ECS task role credentials: ' + JSON.stringify(e));
+            if (inline) {
+              return false;
+            }
             r.return(500);
             return;
         }
@@ -274,6 +197,9 @@ async function fetchCredentials(r) {
             credentials = await _fetchWebIdentityCredentials(r)
         } catch (e) {
             utils.debug_log(r, 'Could not assume role using web identity: ' + JSON.stringify(e));
+            if (inline) {
+              return false;
+            }
             r.return(500);
             return;
         }
@@ -282,6 +208,9 @@ async function fetchCredentials(r) {
             credentials = await _fetchEC2RoleCredentials();
         } catch (e) {
             utils.debug_log(r, 'Could not load EC2 task role credentials: ' + JSON.stringify(e));
+            if (inline) {
+              return false;
+            }
             r.return(500);
             return;
         }
@@ -290,9 +219,17 @@ async function fetchCredentials(r) {
         writeCredentials(r, credentials);
     } catch (e) {
         utils.debug_log(r, `Could not write credentials: ${e}`);
+        if (inline) {
+          return false;
+        }
         r.return(500);
         return;
     }
+
+    if (inline) {
+      return true;
+    }
+
     r.return(200);
 }
 

@@ -3,10 +3,10 @@ services:
   nginx_aws_signature_test:
     hostname: nginx_aws_signature_test
     container_name: nginx_aws_signature_test
-    image: nginx_aws_signature_test:${NGINX_TYPE}
+    image: nginx_aws_signature_test:${nginx_type}
     build:
       context: ./
-      dockerfile: Dockerfile.${NGINX_TYPE}
+      dockerfile: Dockerfile.${nginx_type}
     volumes:
       - ./build_context/etc/nginx/conf.d:/etc/nginx/conf.d
       - ../../core:/etc/nginx/serverless

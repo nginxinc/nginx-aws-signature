@@ -61,123 +61,6 @@ function testReadCredentialsWithAccessSecretKeyAndSessionTokenSet() {
     }
 }
 
-function testReadCredentialsFromFilePath() {
-    printHeader('testReadCredentialsFromFilePath');
-    let r = {
-        variables: {
-            cache_instance_credentials_enabled: 0
-        }
-    };
-
-    var originalCredentialPath = process.env['AWS_CREDENTIALS_TEMP_FILE'];
-    var tempDir = (process.env['TMPDIR'] ? process.env['TMPDIR'] : '/tmp');
-    var uniqId = `${new Date().getTime()}-${Math.floor(Math.random()*101)}`;
-    var tempFile = `${tempDir}/credentials-unit-test-${uniqId}.json`;
-    var testData = '{"accessKeyId":"A","secretAccessKey":"B",' +
-        '"sessionToken":"C","expiration":"2022-02-15T04:49:08Z"}';
-    fs.writeFileSync(tempFile, testData);
-
-    try {
-        process.env['AWS_CREDENTIALS_TEMP_FILE'] = tempFile;
-        var credentials = awscred.readCredentials(r);
-        var testDataAsJSON = JSON.parse(testData);
-        if (credentials.accessKeyId !== testDataAsJSON.accessKeyId) {
-            throw 'JSON test data does not match credentials [accessKeyId]';
-        }
-        if (credentials.secretAccessKey !== testDataAsJSON.secretAccessKey) {
-            throw 'JSON test data does not match credentials [secretAccessKey]';
-        }
-        if (credentials.sessionToken !== testDataAsJSON.sessionToken) {
-            throw 'JSON test data does not match credentials [sessionToken]';
-        }
-        if (credentials.expiration !== testDataAsJSON.expiration) {
-            throw 'JSON test data does not match credentials [expiration]';
-        }
-    } finally {
-        if (originalCredentialPath) {
-            process.env['AWS_CREDENTIALS_TEMP_FILE'] = originalCredentialPath;
-        }
-        if (fs.statSync(tempFile, {throwIfNoEntry: false})) {
-            fs.unlinkSync(tempFile);
-        }
-    }
-}
-
-function testReadCredentialsFromNonexistentPath() {
-    printHeader('testReadCredentialsFromNonexistentPath');
-    let r = {
-        variables: {
-            cache_instance_credentials_enabled: 0
-        }
-    };
-    var originalCredentialPath = process.env['AWS_CREDENTIALS_TEMP_FILE'];
-    var tempDir = (process.env['TMPDIR'] ? process.env['TMPDIR'] : '/tmp');
-    var uniqId = `${new Date().getTime()}-${Math.floor(Math.random()*101)}`;
-    var tempFile = `${tempDir}/credentials-unit-test-${uniqId}.json`;
-
-    try {
-        process.env['AWS_CREDENTIALS_TEMP_FILE'] = tempFile;
-        var credentials = awscred.readCredentials(r);
-        if (credentials !== undefined) {
-            throw 'Credentials returned when no credentials file should be present';
-        }
-
-    } finally {
-        if (originalCredentialPath) {
-            process.env['AWS_CREDENTIALS_TEMP_FILE'] = originalCredentialPath;
-        }
-        if (fs.statSync(tempFile, {throwIfNoEntry: false})) {
-            fs.unlinkSync(tempFile);
-        }
-    }
-}
-
-function testReadAndWriteCredentialsFromKeyValStore() {
-    printHeader('testReadAndWriteCredentialsFromKeyValStore');
-
-    let accessKeyId = process.env['AWS_ACCESS_KEY_ID'];
-    let secretKey = process.env['AWS_SECRET_ACCESS_KEY'];
-    let sessionToken = null;
-    if ('AWS_SESSION_TOKEN' in process.env) {
-        sessionToken = process.env['AWS_SESSION_TOKEN'];
-    }
-    delete process.env.AWS_ACCESS_KEY_ID;
-    delete process.env.AWS_SECRET_ACCESS_KEY;
-    if ('AWS_SESSION_TOKEN' in process.env) {
-        delete process.env.AWS_SESSION_TOKEN
-    }
-    try {
-        let r = {
-            variables: {
-                cache_instance_credentials_enabled: 1,
-                instance_credential_json: null
-            }
-        };
-        let expectedCredentials = {
-            AccessKeyId: 'AN_ACCESS_KEY_ID',
-            Expiration: '2017-05-17T15:09:54Z',
-            RoleArn: 'TASK_ROLE_ARN',
-            SecretAccessKey: 'A_SECRET_ACCESS_KEY',
-            Token: 'A_SECURITY_TOKEN',
-        };
-
-        awscred.writeCredentials(r, expectedCredentials);
-        let credentials = JSON.stringify(awscred.readCredentials(r));
-        let expectedJson = JSON.stringify(expectedCredentials);
-
-        if (credentials !== expectedJson) {
-            console.log(`EXPECTED:\n${expectedJson}\nACTUAL:\n${credentials}`);
-            throw 'Credentials do not match expected value';
-        }
-    } finally {
-        process.env['AWS_ACCESS_KEY_ID'] = accessKeyId;
-        process.env['AWS_SECRET_ACCESS_KEY'] = secretKey;
-        if ('AWS_SESSION_TOKEN' in process.env) {
-            process.env['AWS_SESSION_TOKEN'] = sessionToken
-        }
-    }
-}
-
 async function testEcsCredentialRetrieval() {
     printHeader('testEcsCredentialRetrieval');
     if ('AWS_ACCESS_KEY_ID' in process.env) {
@@ -308,9 +191,6 @@ async function test() {
     await testEc2CredentialRetrieval();
     await testEcsCredentialRetrieval();
     testReadCredentialsWithAccessSecretKeyAndSessionTokenSet();
-    testReadCredentialsFromFilePath();
-    testReadCredentialsFromNonexistentPath();
-    testReadAndWriteCredentialsFromKeyValStore();
 }
 
 function printHeader(testName) {
