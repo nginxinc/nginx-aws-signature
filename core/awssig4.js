@@ -29,7 +29,7 @@ const EMPTY_PAYLOAD_HASH = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495
  * Constant defining the headers being signed.
  * @type {string}
  */
-const DEFAULT_SIGNED_HEADERS = 'host;x-amz-date';
+const DEFAULT_SIGNED_HEADERS = 'host;x-amz-content-sha256;x-amz-date';
 
 /**
  * Create HTTP Authorization header for authenticating with an AWS compatible
@@ -77,6 +77,7 @@ function _buildCanonicalRequest(r,
     method, uri, queryParams, host, amzDatetime, sessionToken) {
     const payloadHash = awsHeaderPayloadHash(r);
     let canonicalHeaders = 'host:' + host + '\n' +
+                           'x-amz-content-sha256:' + payloadHash + '\n' +
                            'x-amz-date:' + amzDatetime + '\n';
 
     if (sessionToken && sessionToken.length > 0) {

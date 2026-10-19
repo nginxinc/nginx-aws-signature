@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Sign the `x-amz-content-sha256` header in AWS Signature Version 4: it is now part of the canonical headers and of `SignedHeaders`. S3-compatible storages that require it to be signed (such as Huawei OceanStor) rejected requests before.
+
 ## 1.0.0 (4 19, 2023)
 
 - Initial release of the `nginx-aws-signature` repository.
